@@ -27,7 +27,9 @@ RUN apt update && apt install -y \
   && python -m venv /venv \
   && /venv/bin/pip install --upgrade pip \
   && /venv/bin/pip install -r requirements.txt \
-  && ln -s /venv/bin/gunicorn /usr/local/bin/gunicorn
+  && ln -s /venv/bin/gunicorn /usr/local/bin/gunicorn \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # 4️⃣ Google Chrome 수동 다운로드 및 설치
 RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
@@ -36,9 +38,9 @@ RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chr
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-# 5️⃣ ChromeDriver 자동 설치 (Chrome 버전에 맞춤)
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
-  && wget -q -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip \
+# 5️⃣ 최신 Chrome 버전에 맞는 ChromeDriver 다운로드
+RUN CHROME_VERSION=134.0.6998.35 \
+  && wget -q -O /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip \
   && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
   && rm /tmp/chromedriver.zip \
   && chmod +x /usr/local/bin/chromedriver
