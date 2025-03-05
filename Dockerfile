@@ -6,22 +6,34 @@ WORKDIR /app
 
 # 3️⃣ 필요한 패키지 설치
 COPY requirements.txt requirements.txt
-RUN apt update && apt install -y apt-utils python3-venv libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon-x11-0 libgbm1 google-chrome-stable && \
-  python -m venv /venv && \
-  /venv/bin/pip install --upgrade pip && \
-  /venv/bin/pip install -r requirements.txt &&\
-  ln -s /venv/bin/gunicorn /usr/local/bin/gunicorn  
-# Gunicorn을 실행 가능하도록 설정
+RUN apt update && apt install -y \
+  apt-utils \
+  python3-venv \
+  libnss3 \
+  libatk1.0-0 \
+  libatk-bridge2.0-0 \
+  libcups2 \
+  libxcomposite1 \
+  libxrandr2 \
+  libxdamage1 \
+  libxkbcommon-x11-0 \
+  libgbm1 \
+  libasound2 \
+  fonts-liberation \
+  libnspr4 \
+  wget \
+  unzip \
+  curl \
+  && python -m venv /venv \
+  && /venv/bin/pip install --upgrade pip \
+  && /venv/bin/pip install -r requirements.txt \
+  && ln -s /venv/bin/gunicorn /usr/local/bin/gunicorn
 
-# PATH 설정 추가
-ENV PATH="/venv/bin:$HOME/.local/bin:$PATH"
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-# 4️⃣ Chrome 및 ChromeDriver 설치 (Selenium 실행용)
-
-RUN apt-get update && apt-get install -y wget unzip \
-  && wget -q -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip \
+# 4️⃣ 최신 Chrome 및 ChromeDriver 설치 (Selenium 실행용)
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+  && apt update && apt install -y google-chrome-stable \
+  && wget -q -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)/chromedriver_linux64.zip \
   && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
   && rm /tmp/chromedriver.zip \
   && chmod +x /usr/local/bin/chromedriver
