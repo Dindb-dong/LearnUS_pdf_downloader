@@ -19,6 +19,10 @@ RUN apt update && apt install -y \
   libxkbcommon-x11-0 \
   libgbm1 \
   libasound2 \
+  libgtk-3-0 \
+  libxfixes3 \
+  xdg-utils \
+  libvulkan1 \
   fonts-liberation \
   libnspr4 \
   wget \
@@ -39,7 +43,7 @@ RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chr
   && rm -rf /var/lib/apt/lists/*
 
 # 5️⃣ 최신 Chrome 버전에 맞는 ChromeDriver 다운로드
-RUN CHROME_VERSION=134.0.6998.35 \
+RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
   && wget -q -O /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip \
   && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
   && rm /tmp/chromedriver.zip \
