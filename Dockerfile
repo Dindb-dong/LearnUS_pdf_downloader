@@ -9,7 +9,7 @@ COPY requirements.txt requirements.txt
 RUN apt update && apt install -y python3-venv && \
   python -m venv /venv && \
   /venv/bin/pip install --upgrade pip && \
-  /venv/bin/pip install -r requirements.txt\
+  /venv/bin/pip install -r requirements.txt &&\
   ln -s /venv/bin/gunicorn /usr/local/bin/gunicorn  
 # Gunicorn을 실행 가능하도록 설정
 
