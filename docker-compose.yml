@@ -1,0 +1,25 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5050:5000"
+    depends_on:
+      redis:
+        condition: service_started
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - .:/app
+    restart: always
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  redis_data:

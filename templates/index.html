@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>런어스 PDF 업스케일 다운로드</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4ff;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #1e3a8a; /* 파란색 강조 */
+        }
+
+        p {
+            font-size: 18px;
+        }
+
+        input {
+            width: 80%;
+            max-width: 400px;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #1e3a8a;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #1e3a8a;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #153075;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        a {
+            text-decoration: none;
+            font-weight: bold;
+            color: white;
+            background-color: #1e3a8a;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        a:hover {
+            background-color: #153075;
+        }
+
+        .container {
+            background: white;
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <p><strong>응용통계학과 파이팅 📊🔥</strong></p>
+        <h1>런어스 PDF 업스케일 다운로드</h1>
+
+        <input type="text" id="pdf_url" placeholder="📄 PDF URL 입력">
+        <input type="text" id="file_name" placeholder="📂 저장할 파일명 입력">
+
+        <button onclick="submitTask()">🚀 변환 시작</button>
+
+        <p id="status"></p>
+    </div>
+
+    <script>
+        async function submitTask() {
+            let url = document.getElementById("pdf_url").value;
+            let fileName = document.getElementById("file_name").value;
+
+            if (!url || !fileName) {
+                document.getElementById("status").innerText = "⚠️ PDF URL과 파일명을 입력해주세요.";
+                return;
+            }
+
+            let response = await fetch("/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pdf_url: url, file_name: fileName })
+            });
+
+            let data = await response.json();
+            if (data.task_id) {
+                checkStatus(data.task_id);
+            }
+        }
+
+        async function checkStatus(task_id) {
+            let statusElem = document.getElementById("status");
+            let interval = setInterval(async () => {
+                let response = await fetch(`/status/${task_id}`);
+                let data = await response.json();
+
+                if (data.status === "SUCCESS") {
+                    clearInterval(interval);
+                    statusElem.innerHTML = `<a href="${data.result}">📥 PDF 다운로드</a>`;
+                } else {
+                    statusElem.innerText = `⏳ 작업 진행 중... (${data.status})`;
+                }
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>
