@@ -13,7 +13,7 @@ services:
     volumes:
       - .:/app
     restart: always
-    command: gunicorn -b 0.0.0.0:5000 -w 4 wsgi:app
+    command: sh -c "PYTHONPATH=. gunicorn -b 0.0.0.0:5000 -w 4 wsgi:app"
 
   worker:  # ✅ Celery Worker 서비스 추가
     build: .
