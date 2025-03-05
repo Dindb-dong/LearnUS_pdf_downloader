@@ -10,9 +10,9 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
-      - .:/app
+      - .:/
     restart: always
-    command: gunicorn -b 0.0.0.0:5000 -w 4 app:app
+    command: gunicorn -b 0.0.0.0:5000 -w 4 wsgi:app
 
   worker:  # ✅ Celery Worker 서비스 추가
     build: .
@@ -23,7 +23,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
-      - .:/app
+      - .:/
     restart: always
 
   redis:

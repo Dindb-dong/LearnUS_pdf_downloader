@@ -2,7 +2,7 @@
 FROM python:3.9
 
 # 2️⃣ 작업 디렉토리 설정
-WORKDIR /app
+WORKDIR /
 
 # 3️⃣ 필수 패키지 설치
 COPY requirements.txt requirements.txt
@@ -51,10 +51,13 @@ RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
   && rm /tmp/chromedriver.zip \
   && chmod +x /usr/local/bin/chromedriver
 
+# 🔹 추가: 실행 환경 경로 설정
+ENV PATH="/venv/bin:$PATH"
+
 # 6️⃣ 프로젝트 파일 복사
 COPY . .
 
 # 7️⃣ 웹 서버 및 워커 실행을 위한 엔트리포인트 설정
 ENTRYPOINT ["/bin/sh", "-c"]
 
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "wsgi:app"]
