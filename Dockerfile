@@ -16,6 +16,8 @@ RUN apt update && apt install -y apt-utils python3-venv && \
 # PATH 설정 추가
 ENV PATH="/venv/bin:$HOME/.local/bin:$PATH"
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 # 4️⃣ Chrome 및 ChromeDriver 설치 (Selenium 실행용)
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
