@@ -14,7 +14,7 @@
         }
 
         h1 {
-            color: #1e3a8a; /* 파란색 강조 */
+            color: #1e3a8a;
         }
 
         p {
@@ -42,7 +42,12 @@
             transition: 0.3s;
         }
 
-        button:hover {
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        button:hover:enabled {
             background-color: #153075;
         }
 
@@ -88,7 +93,7 @@
         <input type="text" id="pdf_url" placeholder="📄 PDF URL 입력">
         <input type="text" id="file_name" placeholder="📂 저장할 파일명 입력">
 
-        <button onclick="submitTask()">🚀 변환 시작</button>
+        <button id="convertBtn" onclick="submitTask()">🚀 변환 시작</button>
 
         <p id="status"></p>
     </div>
@@ -97,11 +102,17 @@
         async function submitTask() {
             let url = document.getElementById("pdf_url").value;
             let fileName = document.getElementById("file_name").value;
+            let button = document.getElementById("convertBtn");
+            let statusElem = document.getElementById("status");
 
             if (!url || !fileName) {
-                document.getElementById("status").innerText = "⚠️ PDF URL과 파일명을 입력해주세요.";
+                statusElem.innerText = "⚠️ PDF URL과 파일명을 입력해주세요.";
                 return;
             }
+
+            // 버튼 비활성화
+            button.disabled = true;
+            statusElem.innerText = "🚀 작업이 시작되었습니다...";
 
             let response = await fetch("/submit", {
                 method: "POST",
@@ -111,12 +122,16 @@
 
             let data = await response.json();
             if (data.task_id) {
-                checkStatus(data.task_id);
+                checkStatus(data.task_id, button);
+            } else {
+                statusElem.innerText = "❌ 작업 제출에 실패했습니다.";
+                button.disabled = false; // 실패 시 버튼 다시 활성화
             }
         }
 
-        async function checkStatus(task_id) {
+        async function checkStatus(task_id, button) {
             let statusElem = document.getElementById("status");
+
             let interval = setInterval(async () => {
                 let response = await fetch(`/status/${task_id}`);
                 let data = await response.json();
@@ -124,8 +139,15 @@
                 if (data.status === "SUCCESS") {
                     clearInterval(interval);
                     statusElem.innerHTML = `<a href="${data.result}">📥 PDF 다운로드</a>`;
+                    button.disabled = false; // 변환 완료 후 버튼 활성화
                 } else {
-                    statusElem.innerText = `⏳ 작업 진행 중... (${data.status})`;
+                    let statusText = `⏳ 작업 진행 중... (${data.status})`;
+
+                    if (data.status === "PROGRESS") {
+                        statusText += `\n${data.result}`; // 상세 상태 메시지
+                    }
+
+                    statusElem.innerText = statusText;
                 }
             }, 2000);
         }

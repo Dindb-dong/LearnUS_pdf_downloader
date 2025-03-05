@@ -16,8 +16,17 @@ RUN apt update && apt install -y apt-utils python3-venv && \
 # PATH 설정 추가
 ENV PATH="/venv/bin:$HOME/.local/bin:$PATH"
 
-# 4️⃣ 프로젝트 파일 복사
+# 4️⃣ Chrome 및 ChromeDriver 설치 (Selenium 실행용)
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+  && apt update \
+  && apt install -y google-chrome-stable \
+  && wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip \
+  && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
+  && rm /tmp/chromedriver.zip
+
+# 5️⃣ 프로젝트 파일 복사
 COPY . .
 
-# 5️⃣ Gunicorn 실행 (최적화된 워커 설정)
+# 6️⃣ Gunicorn 실행 (최적화된 워커 설정)
 CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "app:app"]

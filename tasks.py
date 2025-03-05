@@ -22,9 +22,8 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 os.makedirs(IMG_DIR, exist_ok=True)
 os.makedirs(UPSCALE_DIR, exist_ok=True)
 
-@celery.task(bind=True)
-def process_pdf(self, pdf_url, file_name):
-    """런어스에서 PDF를 PNG로 변환, 업스케일 후 PDF로 저장"""
+def download_pdf_images(pdf_url):
+    """PDF 뷰어에서 이미지를 다운로드하여 로컬에 저장"""
     try:
         # 1️⃣ Selenium 설정
         chrome_options = Options()
@@ -58,7 +57,7 @@ def process_pdf(self, pdf_url, file_name):
         except:
             print("❌ PDF 뷰어 요소를 찾을 수 없음!")
             driver.quit()
-            return {"error": "PDF 뷰어를 찾을 수 없음"}
+            return []
 
         # 5️⃣ 자동 스크롤하여 모든 페이지 로드
         scroll_attempts = 0
@@ -90,7 +89,7 @@ def process_pdf(self, pdf_url, file_name):
         driver.quit()
 
         if not image_elements:
-            return {"error": "이미지를 찾을 수 없음"}
+            return []
 
         base_url = None
         page_count = 0
@@ -106,7 +105,7 @@ def process_pdf(self, pdf_url, file_name):
                 page_count += 1
 
         if not base_url or page_count == 0:
-            return {"error": "이미지 URL을 찾을 수 없음"}
+            return []
 
         print(f"🌟 감지된 페이지 개수: {page_count}")
 
@@ -126,8 +125,22 @@ def process_pdf(self, pdf_url, file_name):
             except requests.exceptions.RequestException as e:
                 print(f"❌ 요청 오류: {e}")
 
-        # 7️⃣ 업스케일링 (4배 해상도)
-        def upscale_image(input_path, output_path, scale_factor=4):
+        return downloaded_images  # 다운로드된 이미지 리스트 반환
+
+    except Exception as e:
+        print(f"❌ 다운로드 오류: {str(e)}")
+        return []
+      
+def convert_images_to_pdf(image_files, output_pdf):
+            images = [Image.open(img).convert("RGB") for img in image_files]
+            if images:
+                images[0].save(output_pdf, save_all=True, append_images=images[1:])
+                print(f"📄 PDF 변환 완료: {output_pdf}")
+            else:
+                print("❌ 변환할 이미지가 없음")
+                
+
+def upscale_image(input_path, output_path, scale_factor=4):
             try:
                 img = Image.open(input_path)
                 new_size = (img.width * scale_factor, img.height * scale_factor)
@@ -138,30 +151,42 @@ def process_pdf(self, pdf_url, file_name):
                 print(f"❌ 업스케일 실패: {input_path}, 오류: {e}")
                 return None
 
-        upscaled_images = []
-        for img_path in downloaded_images:
-            img_name = os.path.basename(img_path)
-            upscaled_path = os.path.join(UPSCALE_DIR, img_name)
-            upscaled_img = upscale_image(img_path, upscaled_path)
+@celery.task(bind=True)
+def process_pdf(self, pdf_url, file_name):
+    """PDF 다운로드 → 이미지 변환 → 업스케일링 → PDF 변환"""
+    try:
+        # 1️⃣ PDF 뷰어에서 이미지 다운로드 과정
+        self.update_state(state="PROGRESS", meta="📄 PDF 다운로드 중...")
+        
+        downloaded_images = download_pdf_images(pdf_url)
 
-            if upscaled_img:
-                upscaled_images.append(upscaled_img)
+        if not downloaded_images:
+            return {"error": "PDF 다운로드 실패"}
 
-        # 8️⃣ 업스케일된 PNG → PDF 변환
-        def convert_images_to_pdf(image_files, output_pdf):
-            images = [Image.open(img).convert("RGB") for img in image_files]
-            if images:
-                images[0].save(output_pdf, save_all=True, append_images=images[1:])
-                print(f"📄 PDF 변환 완료: {output_pdf}")
-            else:
-                print("❌ 변환할 이미지가 없음")
+        # 2️⃣ 업스케일 상태 업데이트
+        self.update_state(state="PROGRESS", meta="🖼️ 이미지 업스케일링 중...")
 
-        final_pdf_path = os.path.join(SAVE_DIR, f"{file_name}.pdf")
-        convert_images_to_pdf(upscaled_images, final_pdf_path)
+        upscaled_images = upscale_image(downloaded_images)
 
-        # ✅ 임시 파일 삭제
+        if not upscaled_images:
+            return {"error": "업스케일 실패"}
+
+        # 3️⃣ PDF 변환 상태 업데이트
+        self.update_state(state="PROGRESS", meta="📄 PDF 변환 중...")
+
+        final_pdf_path = convert_images_to_pdf(upscaled_images, file_name)
+
+        if not final_pdf_path:
+            return {"error": "PDF 변환 실패"}
+
+        # ✅ 4️⃣ 임시 파일 삭제
+        self.update_state(state="PROGRESS", meta="🗑️ 임시 파일 삭제 중...")
         for file_path in downloaded_images + upscaled_images:
-            os.remove(file_path)  # PNG 파일 삭제
+            try:
+                os.remove(file_path)  # PNG 파일 삭제
+                print(f"🗑️ 삭제 완료: {file_path}")
+            except Exception as e:
+                print(f"⚠️ 파일 삭제 실패: {file_path}, 오류: {e}")
 
         return {"pdf_url": f"/download/{file_name}.pdf"}
 
