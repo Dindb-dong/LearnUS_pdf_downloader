@@ -6,7 +6,7 @@ WORKDIR /app
 
 # 3️⃣ 필요한 패키지 설치
 COPY requirements.txt requirements.txt
-RUN apt update && apt install -y apt-utils python3-venv libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon-x11-0 libgbm1 && \
+RUN apt update && apt install -y apt-utils python3-venv libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon-x11-0 libgbm1 google-chrome-stable && \
   python -m venv /venv && \
   /venv/bin/pip install --upgrade pip && \
   /venv/bin/pip install -r requirements.txt &&\
