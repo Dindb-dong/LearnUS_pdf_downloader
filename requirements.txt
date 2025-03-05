@@ -7,3 +7,4 @@ redis
 Pillow
 gunicorn
 selenium
+webdriver-manager
