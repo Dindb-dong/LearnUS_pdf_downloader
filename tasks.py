@@ -12,15 +12,15 @@ from celery import Celery
 from webdriver_manager.chrome import ChromeDriverManager  # ✅ 자동 다운로드 추가
 
 
-def get_chrome_driver():
-    """Chrome과 ChromeDriver 버전을 자동으로 맞춤"""
+def get_driver():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless")  # GUI 없이 실행
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
 
-    service = Service(ChromeDriverManager().install())  # ✅ 자동 감지 및 다운로드
-    return get_chrome_driver(service=service, options=chrome_options)
+    service = Service(ChromeDriverManager().install())  # ✅ 자동으로 최신 ChromeDriver 설치
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    return driver
 
 # Celery 설정
 celery = Celery("tasks", broker="redis://localhost:6379/0", backend="redis://localhost:6379/0")
