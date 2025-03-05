@@ -38,9 +38,7 @@ RUN apt update && apt install -y \
 # 4️⃣ Google Chrome 수동 다운로드 및 설치
 RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
   && apt install -y /tmp/google-chrome.deb \
-  && rm /tmp/google-chrome.deb\
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && rm /tmp/google-chrome.deb
 
 # 5️⃣ 최신 Chrome 버전에 맞는 ChromeDriver 다운로드
 RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
