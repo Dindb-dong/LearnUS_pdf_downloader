@@ -29,12 +29,15 @@ def submit():
 @app.route("/status/<task_id>")
 def task_status(task_id):
     task = AsyncResult(task_id)
+    response = {"status": task.state}
     
     # 작업이 성공적으로 끝난 경우 다운로드 링크 추가
     if task.state == "SUCCESS" and isinstance(task.result, dict) and "pdf_url" in task.result:
-        return jsonify({"status": task.state, "result": task.result["pdf_url"]})
+        response["result"] = task.result["pdf_url"]
+    elif task.state == "PROGRESS":
+        response["message"] = task.info  # 여기에 진행 상태 메시지 추가!
     
-    return jsonify({"status": task.state, "result": task.result})
+    return jsonify(response)
 
 # 변환된 PDF 다운로드
 @app.route("/download/<filename>")
