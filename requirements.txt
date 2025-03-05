@@ -6,3 +6,4 @@ celery[redis]  # Celery + Redis 지원
 redis
 Pillow
 gunicorn
+selenium

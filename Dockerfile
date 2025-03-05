@@ -6,7 +6,7 @@ WORKDIR /app
 
 # 3️⃣ 필요한 패키지 설치
 COPY requirements.txt requirements.txt
-RUN apt update && apt install -y python3-venv && \
+RUN apt update && apt install -y apt-utils python3-venv && \
   python -m venv /venv && \
   /venv/bin/pip install --upgrade pip && \
   /venv/bin/pip install -r requirements.txt &&\
