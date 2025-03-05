@@ -6,12 +6,13 @@ WORKDIR /app
 
 # 3️⃣ 필요한 패키지 설치
 COPY requirements.txt requirements.txt
-RUN python -m venv /venv && \
+RUN apt update && apt install -y python3-venv && \
+  python -m venv /venv && \
   /venv/bin/pip install --upgrade pip && \
   /venv/bin/pip install -r requirements.txt
 
-# 환경 변수 설정 (venv 활성화)
-ENV PATH="/app/venv/bin:$PATH"
+# PATH 설정 추가
+ENV PATH="/venv/bin:$HOME/.local/bin:$PATH"
 
 # 4️⃣ 프로젝트 파일 복사
 COPY . .
