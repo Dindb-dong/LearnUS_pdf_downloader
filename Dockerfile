@@ -32,6 +32,7 @@ RUN apt update && apt install -y \
   && /venv/bin/pip install --upgrade pip \
   && /venv/bin/pip install -r requirements.txt \
   && ln -s /venv/bin/gunicorn /usr/local/bin/gunicorn \
+  && ln -s /venv/bin/celery /usr/local/bin/celery \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -53,5 +54,7 @@ RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
 # 6️⃣ 프로젝트 파일 복사
 COPY . .
 
-# 7️⃣ Gunicorn 실행 (최적화된 워커 설정)
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "app:app"]
+# 7️⃣ 웹 서버 및 워커 실행을 위한 엔트리포인트 설정
+ENTRYPOINT ["/bin/sh", "-c"]
+
+CMD ["gunicorn -b 0.0.0.0:5000 -w 4 app:app"]
