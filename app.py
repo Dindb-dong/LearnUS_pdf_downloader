@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify, send_file, render_template
-from tasks import process_pdf
+from tasks.tasks import process_pdf
 from celery.result import AsyncResult
 
 app = Flask(__name__)

@@ -221,3 +221,6 @@ def process_pdf(self, pdf_url, file_name):
 
     except Exception as e:
         return {"error": str(e)}
+    
+if __name__ == "__main__":
+    celery.start()
