@@ -60,4 +60,4 @@ COPY . .
 # 7️⃣ 웹 서버 및 워커 실행을 위한 엔트리포인트 설정
 ENTRYPOINT ["/bin/sh", "-c"]
 
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "wsgi:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "app:app"]
