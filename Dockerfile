@@ -4,7 +4,7 @@ FROM python:3.9
 # 2️⃣ 작업 디렉토리 설정
 WORKDIR /app
 
-# 3️⃣ 필요한 패키지 설치
+# 3️⃣ 필수 패키지 설치
 COPY requirements.txt requirements.txt
 RUN apt update && apt install -y \
   apt-utils \
@@ -29,17 +29,20 @@ RUN apt update && apt install -y \
   && /venv/bin/pip install -r requirements.txt \
   && ln -s /venv/bin/gunicorn /usr/local/bin/gunicorn
 
-# 4️⃣ 최신 Chrome 및 ChromeDriver 설치 (Selenium 실행용)
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-  && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-  && apt update && apt install -y google-chrome-stable \
-  && wget -q -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)/chromedriver_linux64.zip \
+# 4️⃣ Google Chrome 수동 다운로드 및 설치
+RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+  && apt install -y ./tmp/google-chrome.deb \
+  && rm /tmp/google-chrome.deb
+
+# 5️⃣ ChromeDriver 자동 설치 (Chrome 버전에 맞춤)
+RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
+  && wget -q -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/${CHROME_VERSION}/chromedriver_linux64.zip \
   && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
   && rm /tmp/chromedriver.zip \
   && chmod +x /usr/local/bin/chromedriver
 
-# 5️⃣ 프로젝트 파일 복사
+# 6️⃣ 프로젝트 파일 복사
 COPY . .
 
-# 6️⃣ Gunicorn 실행 (최적화된 워커 설정)
+# 7️⃣ Gunicorn 실행 (최적화된 워커 설정)
 CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "app:app"]
