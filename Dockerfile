@@ -41,8 +41,9 @@ RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chr
   && rm /tmp/google-chrome.deb
 
 # 5️⃣ 최신 Chrome 버전에 맞는 ChromeDriver 다운로드
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
-  && wget -q -O /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip \
+RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
+  && LATEST_DRIVER=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/ | grep -o "https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip" | head -n 1) \
+  && wget -q -O /tmp/chromedriver.zip "$LATEST_DRIVER" \
   && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
   && rm /tmp/chromedriver.zip \
   && chmod +x /usr/local/bin/chromedriver
