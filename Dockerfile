@@ -36,6 +36,10 @@ RUN apt update && apt install -y \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+ENV PATH="/venv/bin:$HOME/.local/bin:$PATH"
+
+ARG DEBIAN_FRONTEND=noninteractive
+
 # 4️⃣ Google Chrome 수동 다운로드 및 설치
 RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
   && apt install -y /tmp/google-chrome.deb \
@@ -50,9 +54,6 @@ RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
   && rm -rf /usr/local/bin/chromedriver-linux64 \ 
   && rm /tmp/chromedriver.zip \
   && chmod +x /usr/local/bin/chromedriver
-
-# 🔹 추가: 실행 환경 경로 설정
-ENV PATH="/venv/bin:$PATH"
 
 # 6️⃣ 프로젝트 파일 복사
 COPY . .
