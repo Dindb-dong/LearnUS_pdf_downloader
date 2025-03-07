@@ -17,7 +17,7 @@ services:
 
   worker:  # ✅ Celery Worker 서비스 추가
     build: .
-    command: celery -A tasks.tasks worker --loglevel=info
+    command: celery -A tasks worker --loglevel=info
     depends_on:
       - redis
     environment:
