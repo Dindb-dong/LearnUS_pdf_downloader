@@ -101,10 +101,12 @@ def download_pdf_images(pdf_url):
             prev_image_count = current_image_count
 
         print("✅ 모든 페이지 스크롤 완료!")
+        # 🚀 **driver.quit() 하기 전에 필요한 정보를 먼저 저장**
+        image_data = [(img.get_attribute("id"), img.get_attribute("src")) for img in driver.find_elements(By.TAG_NAME, "img")]
 
         driver.quit()
         print("🚪 브라우저 종료")
-        if not image_elements:
+        if not image_data:
             print("❌ 이미지 요소를 찾을 수 없음")
             return []
 
@@ -112,7 +114,7 @@ def download_pdf_images(pdf_url):
         page_count = 0
         downloaded_images = []
 
-        for img in image_elements:
+        for img in image_data:
             img_id = img.get_attribute("id")
             src = img.get_attribute("src")
 
