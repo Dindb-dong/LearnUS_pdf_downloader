@@ -106,6 +106,7 @@ def download_pdf_images(pdf_url):
 
         driver.quit()
         print("🚪 브라우저 종료")
+        # ✅ `image_data`에서 필요한 정보 추출
         if not image_data:
             print("❌ 이미지 요소를 찾을 수 없음")
             return []
@@ -114,13 +115,10 @@ def download_pdf_images(pdf_url):
         page_count = 0
         downloaded_images = []
 
-        for img in image_data:
-            img_id = img.get_attribute("id")
-            src = img.get_attribute("src")
-
+        for img_id, src in image_data:
             if img_id and img_id.startswith("page"):
                 if img_id == "page0":
-                    base_url = src.rsplit("/", 1)[0]
+                    base_url = src.rsplit("/", 1)[0]  # ✅ base_url 저장
                 page_count += 1
 
         if not base_url or page_count == 0:
