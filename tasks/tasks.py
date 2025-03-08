@@ -17,8 +17,13 @@ def get_driver():
     chrome_options.add_argument("--headless")  # GUI 없이 실행
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--remote-debugging-port=9222")  # ✅ 이 옵션 추가
+    chrome_options.add_argument("--disable-dev-shm-usage")  # ✅ 공유 메모리 사용 제한 방지
+    chrome_options.add_argument("--disable-software-rasterizer")  # ✅ 하드웨어 가속 비활성화
+    chrome_options.add_argument("--disable-extensions")  # ✅ 확장 프로그램 비활성화
+    chrome_options.add_argument("--disable-background-networking")  # ✅ 네트워크 사용 최소화
 
-    service = Service(ChromeDriverManager().install())  # ✅ 자동으로 최신 ChromeDriver 설치
+    service = Service("/usr/local/bin/chromedriver") # 설치한 ChromeDriver 경로
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
@@ -142,6 +147,9 @@ def download_pdf_images(pdf_url):
     except Exception as e:
         print(f"❌ 다운로드 오류: {str(e)}")
         return []
+    finally:
+        if driver:
+            driver.quit()  # 🔹 예외 발생 여부와 상관없이 항상 driver 종료
 
 
 def upscale_images(image_files, scale_factor=4):

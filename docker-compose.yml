@@ -19,7 +19,10 @@ services:
     build: .
     command: celery -A tasks worker --loglevel=info
     depends_on:
-      - redis
+      web:
+        condition: service_healthy  # ✅ web 서비스가 준비된 후 시작
+      redis:
+        condition: service_started
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
