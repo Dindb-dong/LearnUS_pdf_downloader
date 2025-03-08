@@ -103,8 +103,9 @@ def download_pdf_images(pdf_url):
         print("✅ 모든 페이지 스크롤 완료!")
 
         image_elements = driver.find_elements(By.TAG_NAME, "img")
+        print("✅ 이미지 요소 찾음!")
         driver.quit()
-
+        print("🚪 브라우저 종료")
         if not image_elements:
             return []
 
