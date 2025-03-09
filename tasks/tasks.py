@@ -10,18 +10,38 @@ from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 from celery import Celery
 from webdriver_manager.chrome import ChromeDriverManager  # ✅ 자동 다운로드 추가
+from dotenv import load_dotenv  # ✅ .env 파일 로드
+
+# ✅ .env 파일 로드
+load_dotenv()
+
+# ✅ 환경 변수에서 EC2 IP 가져오기
+EC2_IP = os.getenv("EC2_IP")
+
+def is_chrome_running():
+    """✅ EC2에서 실행 중인 Chrome 디버깅 포트(9222)가 열려 있는지 확인"""
+    try:
+        response = requests.get(f"http://{EC2_IP}:9222/json", timeout=2)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False  # 포트가 닫혀 있음
 
 def get_driver():
     chrome_options = Options()
-    chrome_options.debugger_address = "127.0.0.1:9222"  # ✅ EC2에서 실행 중인 Chrome과 연결
+    chrome_options.debugger_address = f"{EC2_IP}:9222"  # 🔹 EC2의 Chrome과 연결
 
-    try:
-        # ✅ 실행 중인 Chrome과 연결
-        driver = webdriver.Remote(command_executor='http://127.0.0.1:9222', options=chrome_options)
-        print("🚀 기존 Chrome 인스턴스와 연결 성공")
-    except Exception as e:
-        print(f"⚠️ 기존 Chrome 연결 실패: {e}")
-        driver = None
+    if is_chrome_running():
+        try:
+            print(f"✅ 기존 Chrome 인스턴스({EC2_IP})와 연결 중...")
+            driver = webdriver.Remote(command_executor=f'http://{EC2_IP}:9222', options=chrome_options)
+            print("🚀 기존 Chrome 인스턴스와 연결 성공!")
+            return driver
+        except Exception as e:
+            print(f"⚠️ 기존 Chrome 연결 실패, 새 Chrome 실행: {e}")
+
+    print("🚀 기존 Chrome이 실행되지 않음, 새로운 ChromeDriver 실행")
+    service = Service("/usr/local/bin/chromedriver")
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     return driver
 

@@ -1,6 +1,8 @@
 services:
   web:
     build: .
+    env_file:
+      - .env  # ✅ .env 파일 로드
     working_dir: /app
     ports:
       - "5000:5000"
@@ -24,6 +26,8 @@ services:
 
   worker:  # ✅ Celery Worker 서비스 추가
     build: .
+    env_file:
+      - .env  # ✅ .env 파일 로드
     command: celery -A tasks worker --loglevel=info --concurrency=4  # ✅ Worker 4개 실행
     depends_on:
       web:

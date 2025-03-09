@@ -31,6 +31,7 @@ RUN apt update && apt install -y \
   && python -m venv /venv \
   && /venv/bin/pip install --upgrade pip \
   && /venv/bin/pip install -r requirements.txt \
+  && /venv/bin/pip install python-dotenv \
   && ln -s /venv/bin/gunicorn /usr/local/bin/gunicorn \
   && ln -s /venv/bin/celery /usr/local/bin/celery \
   && apt-get clean \
