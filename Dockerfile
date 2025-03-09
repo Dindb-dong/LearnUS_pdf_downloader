@@ -45,6 +45,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
   && apt install -y /tmp/google-chrome.deb \
   && rm /tmp/google-chrome.deb \
+  && rm -f /usr/bin/google-chrome /usr/bin/google-chrome-stable \
   && ln -s /opt/google/chrome/google-chrome /usr/bin/google-chrome \
   && ln -s /opt/google/chrome/google-chrome /usr/bin/google-chrome-stable
 
