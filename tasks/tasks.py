@@ -16,15 +16,26 @@ def get_driver():
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # GUI 없이 실행
     chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--remote-debugging-port=9222")  # ✅ 이 옵션 추가
+    chrome_options.add_argument("--remote-debugging-port=9222")  # ✅ 기존 실행된 Chrome 사용
     chrome_options.add_argument("--disable-dev-shm-usage")  # ✅ 공유 메모리 사용 제한 방지
     chrome_options.add_argument("--disable-software-rasterizer")  # ✅ 하드웨어 가속 비활성화
     chrome_options.add_argument("--disable-extensions")  # ✅ 확장 프로그램 비활성화
     chrome_options.add_argument("--disable-background-networking")  # ✅ 네트워크 사용 최소화
+    chrome_options.add_argument("--no-sandbox")  # 샌드박스 모드 비활성화 (EC2 환경에서는 필요)
+    chrome_options.add_argument("--single-process")  # 크롬을 단일 프로세스로 실행
+    chrome_options.add_argument("--disable-background-timer-throttling")  # 백그라운드에서 리소스 절약 방지
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")  # 백그라운드 창 최소화 방지
+    chrome_options.add_argument("--disable-renderer-backgrounding")  # 렌더링 최적화
 
-    service = Service("/usr/local/bin/chromedriver") # 설치한 ChromeDriver 경로
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    try:
+        # ✅ 기존에 실행된 Chrome과 연결
+        driver = webdriver.Remote(command_executor='http://127.0.0.1:9222', options=chrome_options)
+        print("🚀 기존 Chrome 인스턴스와 연결 성공")
+    except Exception as e:
+        print(f"⚠️ 기존 Chrome 연결 실패, 새 Chrome 실행: {e}")
+        service = Service("/usr/local/bin/chromedriver")
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
     return driver
 
 # Celery 설정
