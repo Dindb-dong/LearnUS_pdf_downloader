@@ -24,7 +24,7 @@ services:
 
   worker:  # ✅ Celery Worker 서비스 추가
     build: .
-    command: celery -A tasks worker --loglevel=info
+    command: celery -A tasks worker --loglevel=info --concurrency=4  # ✅ Worker 4개 실행
     depends_on:
       web:
         condition: service_healthy  # ✅ web 서비스가 준비된 후 시작
