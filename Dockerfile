@@ -41,26 +41,8 @@ ENV PATH="/venv/bin:$HOME/.local/bin:$PATH"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# 5️⃣ Google Chrome 수동 다운로드 및 설치, 경로 설정
-RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-  && apt install -y /tmp/google-chrome.deb \
-  && rm /tmp/google-chrome.deb \
-  && rm -f /usr/bin/google-chrome /usr/bin/google-chrome-stable \
-  && ln -s /opt/google/chrome/google-chrome /usr/bin/google-chrome \
-  && ln -s /opt/google/chrome/google-chrome /usr/bin/google-chrome-stable
-
-# 6️⃣ 최신 Chrome 버전에 맞는 ChromeDriver 다운로드
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
-  && LATEST_DRIVER=$(curl -s https://googlechromelabs.github.io/chrome-for-testing/ | grep -o "https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip" | head -n 1) \
-  && wget -q -O /tmp/chromedriver.zip "$LATEST_DRIVER" \
-  && unzip /tmp/chromedriver.zip -d /usr/local/bin/ \
-  && mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
-  && rm -rf /usr/local/bin/chromedriver-linux64 \
-  && rm /tmp/chromedriver.zip \
-  && chmod +x /usr/local/bin/chromedriver
-
-# 7️⃣ 프로젝트 파일 복사
+# 5️⃣ 프로젝트 파일 복사
 COPY . .
 
-# 8️⃣ Gunicorn 실행 (Flask 웹 서버 실행)
+# 6️⃣ Gunicorn 실행 (Flask 웹 서버 실행)
 CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "wsgi:app"]
