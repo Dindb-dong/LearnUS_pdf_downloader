@@ -130,29 +130,29 @@
         }
 
         async function checkStatus(task_id, button) {
-    let statusElem = document.getElementById("status");
+          let statusElem = document.getElementById("status");
 
-    button.disabled = true; // 작업 시작 시 버튼 비활성화
-    statusElem.innerText = "⏳ 작업을 시작합니다...";
+          button.disabled = true; // 작업 시작 시 버튼 비활성화
+          statusElem.innerText = "⏳ 작업을 시작합니다...";
 
-    let interval = setInterval(async () => {
-        let response = await fetch(`/status/${task_id}`);
-        let data = await response.json();
+          let interval = setInterval(async () => {
+              let response = await fetch(`/status/${task_id}`);
+              let data = await response.json();
 
-        if (data.status === "SUCCESS") {
-            clearInterval(interval);
-            statusElem.innerHTML = `<a href="${data.result}">📥 PDF 다운로드</a>`;
-            button.disabled = false; // 변환 완료 후 버튼 활성화
-        } else {
-            let statusText = `⏳ 작업 진행 중... (${data.status})`;
+          if (data.status === "SUCCESS") {
+              clearInterval(interval);
+              statusElem.innerHTML = `<a href="${data.result}">📥 PDF 다운로드</a>`;
+              button.style.display = "none";  // ✅ 변환 완료 후 버튼 숨기기
+          } else {
+              let statusText = `⏳ 작업 진행 중... (${data.status})`;
 
-            if (data.status === "PROGRESS" && data.message) {
-                statusText += `\n🔄 ${data.message}`; // 상세 상태 메시지 표시
-            }
+              if (data.status === "PROGRESS" && data.message) {
+                  statusText += `\n🔄 ${data.message}`; // 상세 상태 메시지 표시
+              }
 
-            statusElem.innerText = statusText;
-        }
-    }, 2000);
+              statusElem.innerText = statusText;
+          }
+        }, 2000);
 }
     </script>
 
