@@ -50,4 +50,4 @@ def download(filename):
     return jsonify({"error": "파일을 찾을 수 없습니다."}), 404
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
