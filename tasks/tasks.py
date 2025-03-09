@@ -12,6 +12,14 @@ from celery import Celery
 from webdriver_manager.chrome import ChromeDriverManager  # ✅ 자동 다운로드 추가
 
 
+def is_chrome_running():
+    """✅ Chrome 디버깅 포트(9222)가 열려 있는지 확인하는 함수"""
+    try:
+        response = requests.get("http://127.0.0.1:9222/json", timeout=2)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False  # 포트가 열려 있지 않으면 False 반환
+
 def get_driver():
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # GUI 없이 실행
@@ -22,19 +30,23 @@ def get_driver():
     chrome_options.add_argument("--disable-extensions")  # ✅ 확장 프로그램 비활성화
     chrome_options.add_argument("--disable-background-networking")  # ✅ 네트워크 사용 최소화
     chrome_options.add_argument("--no-sandbox")  # 샌드박스 모드 비활성화 (EC2 환경에서는 필요)
-    chrome_options.add_argument("--single-process")  # 크롬을 단일 프로세스로 실행
     chrome_options.add_argument("--disable-background-timer-throttling")  # 백그라운드에서 리소스 절약 방지
     chrome_options.add_argument("--disable-backgrounding-occluded-windows")  # 백그라운드 창 최소화 방지
     chrome_options.add_argument("--disable-renderer-backgrounding")  # 렌더링 최적화
 
-    try:
-        # ✅ 기존에 실행된 Chrome과 연결
-        driver = webdriver.Remote(command_executor='http://127.0.0.1:9222', options=chrome_options)
-        print("🚀 기존 Chrome 인스턴스와 연결 성공")
-    except Exception as e:
-        print(f"⚠️ 기존 Chrome 연결 실패, 새 Chrome 실행: {e}")
-        service = Service("/usr/local/bin/chromedriver")
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+    if is_chrome_running():
+        try:
+            print("✅ 기존 Chrome 인스턴스와 연결 중...")
+            driver = webdriver.Remote(command_executor='http://127.0.0.1:9222', options=chrome_options)
+            print("🚀 기존 Chrome 인스턴스와 연결 성공!")
+            return driver
+        except Exception as e:
+            print(f"⚠️ 기존 Chrome 연결 실패, 새 Chrome 실행: {e}")
+
+    # 기존 Chrome이 없으면 새로운 Chrome 실행
+    print("🚀 기존 Chrome이 실행되지 않음, 새 Chrome 인스턴스 실행")
+    service = Service("/usr/local/bin/chromedriver")
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     return driver
 
