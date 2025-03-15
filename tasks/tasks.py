@@ -11,8 +11,6 @@ from PIL import Image
 from celery import Celery
 from webdriver_manager.chrome import ChromeDriverManager  # ✅ 자동 다운로드 추가
 from dotenv import load_dotenv  # ✅ .env 파일 로드
-import subprocess
-import re
 
 # ✅ .env 파일 로드
 load_dotenv()
@@ -21,17 +19,12 @@ load_dotenv()
 EC2_IP = os.getenv("EC2_IP")
 
 def is_chrome_running():
-    """✅ 9223 포트가 실제로 LISTEN 상태인지 확인"""
+    """✅ Chrome 디버깅 포트(9223)가 정상 응답을 반환하는지 확인"""
     try:
-        result = subprocess.run(["ss", "-tulnp"], capture_output=True, text=True)
-        
-        # 정규식을 사용하여 정확하게 9223 포트가 LISTEN 상태인지 확인
-        match = re.search(r"LISTEN.*\b0\.0\.0\.0:9223\b", result.stdout)
-
-        return match is not None
-    except Exception as e:
-        print(f"⚠️ 오류 발생: {e}")
-        return False
+        response = requests.get("http://127.0.0.1:9223/json", timeout=2)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False  # 포트가 닫혀 있거나 응답이 없음
 
 def get_driver():
     chrome_options = Options()
@@ -64,6 +57,21 @@ def get_driver():
 
     return driver
 
+
+def wait_for_chrome(timeout=10, interval=2):
+    """✅ Chrome이 실행될 때까지 최대 timeout초 대기"""
+    start_time = time.time()
+    
+    while time.time() - start_time < timeout:
+        if is_chrome_running():
+            print("🚀 Chrome 실행 확인됨!")
+            return True
+        print("⏳ Chrome 실행 대기 중...")
+        time.sleep(interval)
+    
+    print("❌ Chrome이 실행되지 않음. 종료.")
+    return False
+
 # Celery 설정
 celery = Celery("tasks", broker="redis://127.0.0.1:6379/0", backend="redis://127.0.0.1:6379/0")
 celery.conf.update(
@@ -85,17 +93,9 @@ os.makedirs(UPSCALE_DIR, exist_ok=True)
 def download_pdf_images(pdf_url):
     """PDF 뷰어에서 이미지를 다운로드하여 로컬에 저장"""
     try:
-        # ✅ Chrome 실행을 최대 10초 대기 (최대 5번 체크)
-        max_retries = 5
-        retry_count = 0
-
-        while not is_chrome_running():
-            if retry_count >= max_retries:
-                print("❌ Chrome이 실행되지 않음. 종료.")
-                return []
-            print("⏳ Chrome 실행 대기 중...")
-            time.sleep(2)
-            retry_count += 1
+        # ✅ Chrome이 실행될 때까지 최대 10초 대기
+        if not wait_for_chrome(timeout=10, interval=2):
+            return []
 
         driver = get_driver()  # ✅ 기존 Chrome 인스턴스(9223)과 연결
 
@@ -193,6 +193,7 @@ def download_pdf_images(pdf_url):
     finally:
         if driver:
             driver.quit()  # 🔹 예외 발생 여부와 상관없이 항상 driver 종료
+            print("🚪 브라우저 종료")
 
 
 def upscale_images(image_files, scale_factor=4):
