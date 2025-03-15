@@ -40,10 +40,7 @@ def get_driver():
     if is_chrome_running():
         try:
             print(f"✅ 기존 Chrome 인스턴스({EC2_IP})와 연결 중...")
-            driver = webdriver.Remote(
-                command_executor=f'http://{EC2_IP}:9223',
-                options=chrome_options
-            )
+            driver = webdriver.Chrome(options=chrome_options)
             print("🚀 기존 Chrome 인스턴스와 연결 성공!")
             return driver
         except Exception as e:
