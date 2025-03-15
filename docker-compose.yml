@@ -26,6 +26,7 @@ services:
 
   worker:  # ✅ Celery Worker 서비스 추가
     build: .
+    network_mode: "host" # 컨테이너 내부에서 127.0.0.1:9223로 접근 가능
     env_file:
       - .env  # ✅ .env 파일 로드
     command: celery -A tasks worker --loglevel=info --concurrency=4  # ✅ Worker 4개 실행
