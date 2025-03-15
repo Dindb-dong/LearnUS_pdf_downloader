@@ -36,8 +36,8 @@ services:
       redis:
         condition: service_started
     environment:
-      - CELERY_BROKER_URL=redis://host.docker.internal:6379/0
-      - CELERY_RESULT_BACKEND=redis://host.docker.internal:6379/0
+      - CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+      - CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/0
     volumes:
       - .:/app
     restart: always
