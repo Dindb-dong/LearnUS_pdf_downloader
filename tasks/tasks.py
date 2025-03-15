@@ -18,29 +18,45 @@ load_dotenv()
 # ✅ 환경 변수에서 EC2 IP 가져오기
 EC2_IP = os.getenv("EC2_IP")
 
+import subprocess
+
 def is_chrome_running():
-    """✅ EC2에서 실행 중인 Chrome 디버깅 포트(9223)가 열려 있는지 확인"""
+    """✅ 9223 포트가 실제로 LISTEN 상태인지 확인"""
     try:
-        response = requests.get(f"http://{EC2_IP}:9223/json", timeout=2)
-        return response.status_code == 200
-    except requests.exceptions.RequestException:
-        return False  # 포트가 닫혀 있음
+        result = subprocess.run(
+            ["ss", "-tulnp"], capture_output=True, text=True
+        )
+        return "9223" in result.stdout
+    except Exception:
+        return False
 
 def get_driver():
     chrome_options = Options()
-    chrome_options.debugger_address = f"{EC2_IP}:9223"  # 🔹 EC2의 Chrome과 연결
+    chrome_options.add_argument("--headless")  # ✅ headless 모드 유지
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
+    # ✅ 9223 포트의 DevTools 프로토콜을 명시적으로 사용
+    chrome_options.debugger_address = f"{EC2_IP}:9223"
 
+    # ✅ Chrome이 실행 중인지 확인
     if is_chrome_running():
         try:
             print(f"✅ 기존 Chrome 인스턴스({EC2_IP})와 연결 중...")
-            driver = webdriver.Remote(command_executor=f'http://{EC2_IP}:9223', options=chrome_options)
+            driver = webdriver.Remote(
+                command_executor=f'http://{EC2_IP}:9223',
+                options=chrome_options
+            )
             print("🚀 기존 Chrome 인스턴스와 연결 성공!")
             return driver
         except Exception as e:
-            print(f"⚠️ 기존 Chrome 연결 실패, 새 Chrome 실행: {e}")
+            print(f"⚠️ 기존 Chrome 연결 실패, 새로운 Chrome 실행: {e}")
 
     print("🚀 기존 Chrome이 실행되지 않음, 새로운 ChromeDriver 실행")
-    service = Service("/usr/local/bin/chromedriver")
+
+    # ✅ ChromeDriver 자동 다운로드 및 실행
+    service = Service(ChromeDriverManager().install())  # ✅ 자동 다운로드
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     return driver
@@ -66,6 +82,18 @@ os.makedirs(UPSCALE_DIR, exist_ok=True)
 def download_pdf_images(pdf_url):
     """PDF 뷰어에서 이미지를 다운로드하여 로컬에 저장"""
     try:
+        # ✅ Chrome 실행을 최대 10초 대기 (최대 5번 체크)
+        max_retries = 5
+        retry_count = 0
+
+        while not is_chrome_running():
+            if retry_count >= max_retries:
+                print("❌ Chrome이 실행되지 않음. 종료.")
+                return []
+            print("⏳ Chrome 실행 대기 중...")
+            time.sleep(2)
+            retry_count += 1
+
         driver = get_driver()  # ✅ 기존 Chrome 인스턴스(9223)과 연결
 
         driver.get(pdf_url)
