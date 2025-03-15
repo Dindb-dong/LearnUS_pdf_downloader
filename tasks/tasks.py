@@ -66,13 +66,7 @@ os.makedirs(UPSCALE_DIR, exist_ok=True)
 def download_pdf_images(pdf_url):
     """PDF 뷰어에서 이미지를 다운로드하여 로컬에 저장"""
     try:
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--no-sandbox")
-
-        service = Service("/usr/local/bin/chromedriver")
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver = get_driver()  # ✅ 기존 Chrome 인스턴스(9223)과 연결
 
         driver.get(pdf_url)
         print(f"📄 페이지 로드 중: {pdf_url}")
