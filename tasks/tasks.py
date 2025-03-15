@@ -11,6 +11,8 @@ from PIL import Image
 from celery import Celery
 from webdriver_manager.chrome import ChromeDriverManager  # ✅ 자동 다운로드 추가
 from dotenv import load_dotenv  # ✅ .env 파일 로드
+import subprocess
+import re
 
 # ✅ .env 파일 로드
 load_dotenv()
@@ -18,16 +20,17 @@ load_dotenv()
 # ✅ 환경 변수에서 EC2 IP 가져오기
 EC2_IP = os.getenv("EC2_IP")
 
-import subprocess
-
 def is_chrome_running():
     """✅ 9223 포트가 실제로 LISTEN 상태인지 확인"""
     try:
-        result = subprocess.run(
-            ["ss", "-tulnp"], capture_output=True, text=True
-        )
-        return "9223" in result.stdout
-    except Exception:
+        result = subprocess.run(["ss", "-tulnp"], capture_output=True, text=True)
+        
+        # 정규식을 사용하여 정확하게 9223 포트가 LISTEN 상태인지 확인
+        match = re.search(r"LISTEN.*\b0\.0\.0\.0:9223\b", result.stdout)
+
+        return match is not None
+    except Exception as e:
+        print(f"⚠️ 오류 발생: {e}")
         return False
 
 def get_driver():
