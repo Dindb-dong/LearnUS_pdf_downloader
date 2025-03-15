@@ -62,7 +62,7 @@ def get_driver():
     return driver
 
 # Celery 설정
-celery = Celery("tasks", broker="redis://localhost:6379/0", backend="redis://localhost:6379/0")
+celery = Celery("tasks", broker="redis://127.0.0.1:6379/0", backend="redis://127.0.0.1:6379/0")
 celery.conf.update(
     task_track_started=True,  # 작업 시작 상태를 추적
     result_extended=True,  # 추가적인 결과 정보 저장
