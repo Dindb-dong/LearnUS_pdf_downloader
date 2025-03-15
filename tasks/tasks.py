@@ -19,21 +19,21 @@ load_dotenv()
 EC2_IP = os.getenv("EC2_IP")
 
 def is_chrome_running():
-    """✅ EC2에서 실행 중인 Chrome 디버깅 포트(9222)가 열려 있는지 확인"""
+    """✅ EC2에서 실행 중인 Chrome 디버깅 포트(9223)가 열려 있는지 확인"""
     try:
-        response = requests.get(f"http://{EC2_IP}:9222/json", timeout=2)
+        response = requests.get(f"http://{EC2_IP}:9223/json", timeout=2)
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False  # 포트가 닫혀 있음
 
 def get_driver():
     chrome_options = Options()
-    chrome_options.debugger_address = f"{EC2_IP}:9222"  # 🔹 EC2의 Chrome과 연결
+    chrome_options.debugger_address = f"{EC2_IP}:9223"  # 🔹 EC2의 Chrome과 연결
 
     if is_chrome_running():
         try:
             print(f"✅ 기존 Chrome 인스턴스({EC2_IP})와 연결 중...")
-            driver = webdriver.Remote(command_executor=f'http://{EC2_IP}:9222', options=chrome_options)
+            driver = webdriver.Remote(command_executor=f'http://{EC2_IP}:9223', options=chrome_options)
             print("🚀 기존 Chrome 인스턴스와 연결 성공!")
             return driver
         except Exception as e:
