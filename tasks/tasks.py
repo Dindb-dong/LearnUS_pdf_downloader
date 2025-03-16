@@ -25,13 +25,27 @@ def is_chrome_running():
         return response.status_code == 200
     except requests.exceptions.RequestException:
         return False  # 포트가 닫혀 있거나 응답이 없음
+    
+global_driver = None  # ✅ 크롬 드라이버를 전역 변수로 설정
 
 def get_driver():
+    global global_driver  # ✅ 전역 크롬 드라이버 사용
+
+    if global_driver:
+        print("✅ 기존 크롬 인스턴스 재사용")
+        return global_driver
+    
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # ✅ headless 모드 유지
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--remote-debugging-address=0.0.0.0")  
+    chrome_options.add_argument("--disable-background-timer-throttling")  # ✅ 백그라운드 리소스 절약
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")  # ✅ 비활성 창에서 리소스 절약
+    chrome_options.add_argument("--disable-renderer-backgrounding")  # ✅ 백그라운드에서 GPU 사용 방지
+    chrome_options.add_argument("--single-process")  # ✅ 프로세스 개수 최소화
+    chrome_options.add_argument("--disable-gpu-process")  # ✅ GPU 프로세스 사용 제한
     
     # ✅ 9223 포트의 DevTools 프로토콜을 명시적으로 사용
     chrome_options.debugger_address = f"{EC2_IP}:9223"
@@ -40,9 +54,9 @@ def get_driver():
     if is_chrome_running():
         try:
             print(f"✅ 기존 Chrome 인스턴스({EC2_IP})와 연결 중...")
-            driver = webdriver.Chrome(options=chrome_options)
+            global_driver = webdriver.Chrome(options=chrome_options)
             print("🚀 기존 Chrome 인스턴스와 연결 성공!")
-            return driver
+            return global_driver
         except Exception as e:
             print(f"⚠️ 기존 Chrome 연결 실패, 새로운 Chrome 실행: {e}")
 
@@ -50,9 +64,9 @@ def get_driver():
 
     # ✅ ChromeDriver 자동 다운로드 및 실행
     service = Service(ChromeDriverManager().install())  # ✅ 자동 다운로드
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    global_driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    return driver
+    return global_driver
 
 
 def wait_for_chrome(timeout=10, interval=2):
@@ -115,7 +129,6 @@ def download_pdf_images(pdf_url):
             print("✅ PDF 뷰어 요소 찾음!")
         except:
             print("❌ PDF 뷰어 요소를 찾을 수 없음!")
-            driver.quit()
             return []
 
         scroll_attempts = 0
@@ -141,11 +154,10 @@ def download_pdf_images(pdf_url):
             prev_image_count = current_image_count
 
         print("✅ 모든 페이지 스크롤 완료!")
-        # 🚀 **driver.quit() 하기 전에 필요한 정보를 먼저 저장**
+
+        # 🚀 **driver.quit() 없이 필요한 정보 저장**
         image_data = [(img.get_attribute("id"), img.get_attribute("src")) for img in driver.find_elements(By.TAG_NAME, "img")]
 
-        driver.quit()
-        print("🚪 브라우저 종료")
         # ✅ `image_data`에서 필요한 정보 추출
         if not image_data:
             print("❌ 이미지 요소를 찾을 수 없음")
@@ -187,10 +199,8 @@ def download_pdf_images(pdf_url):
     except Exception as e:
         print(f"❌ 다운로드 오류: {str(e)}")
         return []
-    finally:
-        if driver:
-            driver.quit()  # 🔹 예외 발생 여부와 상관없이 항상 driver 종료
-            print("🚪 브라우저 종료")
+
+    # ⛔️ `finally`에서 driver.quit() 제거됨
 
 
 def upscale_images(image_files, scale_factor=4):
