@@ -7,7 +7,7 @@ services:
     ports:
       - "5000:5000"
     healthcheck:  # ✅ 추가된 부분
-      test: ["CMD", "curl", "-f", "http://0.0.0.0:5000"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5000"]
       interval: 10s
       retries: 3
       start_period: 5s
