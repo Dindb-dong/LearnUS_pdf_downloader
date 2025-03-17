@@ -76,7 +76,7 @@ def get_driver(self=None):
     return driver
 
 # ✅ Chrome 실행 대기
-def wait_for_chrome(timeout=10, interval=2):
+def wait_for_chrome(timeout=30, interval=2):
     start = time.time()
     while time.time() - start < timeout:
         if is_chrome_running():
@@ -248,7 +248,7 @@ def process_pdf(self, pdf_url, file_name):
         return {"error": str(e)}
 
 # ✅ 유휴 감지 스레드
-def monitor_idle(threshold=60, interval=10):  # 1분 이상 유휴 시만 종료
+def monitor_idle(threshold=60, interval=20):  # 1분 이상 유휴 시만 종료
     while True:
         time.sleep(interval)
         if driver_tracker.is_idle(threshold):
