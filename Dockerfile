@@ -44,7 +44,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # 5️⃣ 프로젝트 파일 복사
 COPY . .
-COPY driver_activity_tracker.py /app/driver_activity_tracker.py
 
 # 6️⃣ Gunicorn 실행 (Flask 웹 서버 실행)
 CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "wsgi:app"]
