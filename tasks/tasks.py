@@ -248,7 +248,7 @@ def process_pdf(self, pdf_url, file_name):
         return {"error": str(e)}
 
 # ✅ 유휴 감지 스레드
-def monitor_idle(threshold=10, interval=5):
+def monitor_idle(threshold=60, interval=10):  # 1분 이상 유휴 시만 종료
     while True:
         time.sleep(interval)
         if driver_tracker.is_idle(threshold):
